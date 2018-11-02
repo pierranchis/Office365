@@ -4,12 +4,22 @@
 # Migrate Mailbox to O365                           # region code, and license.                            #
 # Created:                                          #                                                      #
 #                                                   #                                                      #
-# Revision: 1.2.2 - 9/27/2018                       #                                                      #
+# Revision: 1.2.3 - 11/02/2018                      #                                                      #
 ############################################################################################################
 #>
 
 # Import the AD powershell module
     Import-Module activedirectory
+
+# Declare Variables
+    $AzureADServer = 'AzureDCServer'
+    $FullDomain = '@abcd.com'
+    $LocalDomain = 'abcd\'
+    $OnPremURI = 'http://exchangeserver.abcd,com/PowerShell/'
+    $OnPremExRemoteHostName = 'mail.abcd.com'
+    $O365TenantName = 'O365TenantName.mail.onmicrosoft.com'
+    $O365RegionCode = 'Code'
+    $O365ProductSku = 'SKU'
 
 # Initializing a Countdown Function
     Function Start-Countdown
@@ -29,7 +39,7 @@
 # Initializing Azure DS Force Sync Function
   function Start-DeltaSync
     {
-      $session = New-PSSession -ComputerName <#AZDS COMPUTER NAME#>
+      $session = New-PSSession -ComputerName $AzureADServer
       Invoke-Command -Session $session -ScriptBlock {Start-ADSyncSyncCycle Delta}
       Remove-PSSession $session
     }
@@ -37,8 +47,8 @@
 # Prompt the user for Login Credentials
   Write-Host "READ ME! Authentication: Enter your privileged user account. Example; jdoe" -ForegroundColor Yellow
     $DomainUser = Read-Host -Prompt "Privileged User Account"
-    $UPNLogin = $DomainUser + <#"@domain.com"#>
-    $DomainLogin = <#"domain\"#> + $DomainUser
+    $UPNLogin = $DomainUser + $FullDomain
+    $DomainLogin = $LocalDomain + $DomainUser
   Write-Host "READ ME! Authentication: Enter your privileged user account password." -ForegroundColor Yellow
     $DomainPassword = Read-Host -AsSecureString "Privileged User Account Password"
 
@@ -47,7 +57,7 @@
   $DomainCredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $DomainLogin,$DomainPassword
 
 # Connect to Exchange On-Prem
-  $ExSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri <#http://<EXCHANGE.SERVER.FQDN>/PowerShell/#> -Credential $DomainCredentials
+  $ExSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri $OnPremURI -Credential $DomainCredentials
   Import-PSSession $ExSession -AllowClobber
 
 # Connect to Exchange O365
@@ -56,7 +66,7 @@
 
 # Prompt for the email address to migrate
   $Username = Read-Host -Prompt "Enter User's username. Example; jdoe"
-  $UserToMigrateInput = $Username + <#"@domain.com"#>
+  $UserToMigrateInput = $Username + $FullDomain
 
 # Forcing Azure Directory Synchronization with Domain Controllers
   Start-DeltaSync
@@ -68,17 +78,17 @@
   Start-Countdown -Seconds 180 -Message "Forcing Azure Directory Synchronization with Domain Controllers. Waiting 3 minutes"
 
 # Migrate user
-  New-MoveRequest -Remote -RemoteHostName <#"mail.domain.com"#> -RemoteCredential $DomainCredentials -TargetDeliveryDomain <#'O365TenantName.mail.onmicrosoft.com'#> -Identity $UserToMigrateInput -BadItemLimit 200
+  New-MoveRequest -Remote -RemoteHostName $OnPremExRemoteHostName -RemoteCredential $DomainCredentials -TargetDeliveryDomain $O365TenantName -Identity $UserToMigrateInput -BadItemLimit 200
 
 # Connect to Microsoft Online Services
   $MsolSession = Connect-MsolService -Credential $UPNCredentials
 
 # Assign User Regional Setting to USA
-  Set-MsolUser -Userprincipalname $UserToMigrateInput -UsageLocation <#RegionCode#>
+  Set-MsolUser -Userprincipalname $UserToMigrateInput -UsageLocation $O365RegionCode
 
 # Assign Enterpack Pack License to user
   Start-Countdown -Seconds 10 -Message "Applying Regional Setting. Waiting 10 seconds."
-  Set-MsolUserLicense -User $UserToMigrateInput -AddLicenses <#LicenseSKU#>
+  Set-MsolUserLicense -User $UserToMigrateInput -AddLicenses $O365ProductSku
 
 # End of Script Notification
   Write-Host "User Migration script has completed." -ForegroundColor Green
@@ -86,4 +96,3 @@
 # Disconnect Exhange sessions
   Remove-PSSession $ExSession
   Remove-PSSession $O365Session
-
