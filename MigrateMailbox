@@ -15,7 +15,7 @@
     $AzureADServer = 'AzureDCServer'
     $FullDomain = '@abcd.com'
     $LocalDomain = 'abcd\'
-    $OnPremURI = 'http://exchangeserver.abcd,com/PowerShell/'
+    $OnPremURI = 'http://exchangeserver.abcd.com/PowerShell/'
     $OnPremExRemoteHostName = 'mail.abcd.com'
     $O365TenantName = 'O365TenantName.mail.onmicrosoft.com'
     $O365RegionCode = 'Code'
