@@ -9,6 +9,7 @@ Instructions:
 - Make a selection
 
 Requirements:
+- Check out PreReqs.ps1 (Not fully functional, but gets the job done for now)
 - Keep all files together
 - Modify the GlobalVariables script to your personal variables
 - Create an AD template user(s) for the "Create User" script to pull from
