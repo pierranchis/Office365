@@ -1,4 +1,4 @@
-# Script checks for valid Office 2016 directory, runs the activation script, then filters the line confirming license.
+# Script checks for valid Office 2016 directory, runs the activation script, then filters the line confirming activation status.
 # Value greater than 0 means that Office 2016 is activated. Running lines 12+13 alone will also confirm activation.
 # Goal for this script was to create a baseline in SCCM and auto-remediate, hence the $Value variable returning an integer. 
 
